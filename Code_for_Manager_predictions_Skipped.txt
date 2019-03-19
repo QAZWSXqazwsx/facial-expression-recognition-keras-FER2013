@@ -1,0 +1,85 @@
+##### Creating Data for Managers which are skipped during Predictions ####
+y_history_MGR_1616_Managers = y_history_MGR_1616.DE_MANAGER_USERID.drop_duplicates()
+Predictions_Managers = Manager_Predictions.DE_MANAGER_USERID.drop_duplicates()
+Manager_Diff = list(set(y_history_MGR_1616_Managers)^set(Predictions_Managers)) #### FInding the managers which are skipped for predictions
+
+#####  Creating data for the Skipped managers to be stored in Dataframe
+Predictions_Dates = Manager_Predictions['WEEK_END_DATE'].drop_duplicates().values
+Managers_Repeat = list(itertools.chain.from_iterable((itertools.repeat(i, 52) for i in Manager_Diff)))
+Prediction_Dates = list(itertools.chain.from_iterable((itertools.repeat(i, len(Manager_Diff)) for i in Predictions_Dates)))
+Query_ID = np.repeat(1616,len(Managers_Repeat))
+PredictionDate = np.repeat(np.datetime64(datetime.datetime.now().date()),len(Managers_Repeat))
+CFD_ENGG = list(itertools.chain.from_iterable((itertools.repeat(i, len(set(Manager_Diff))) for i in Engg_Data['CFD_ENGG'])))
+IFD_ENGG = list(itertools.chain.from_iterable((itertools.repeat(i, len(set(Manager_Diff))) for i in Engg_Data['IFD_ENGG'])))
+
+##### Creating Data of Zeros for skipped managers
+Managers = [manager for manager in Manager_Diff]
+CFD_INCOMING = []
+CFD_BACKLOG = []
+CFD_DISPOSED = []
+CFDS12_INCOMING = []
+CFDS12_DISPOSED = []
+CFDS12_BACKLOG = []
+IFD_INCOMING = []
+IFD_BACKLOG = []
+IFD_DISPOSED = []
+for manager in Managers:
+    CFD_INCOMING.append(np.zeros(52))
+    CFD_BACKLOG.append(np.zeros(52))
+    CFD_DISPOSED.append(np.zeros(52))
+    CFDS12_INCOMING.append(np.zeros(52))
+    CFDS12_DISPOSED.append(np.zeros(52))
+    CFDS12_BACKLOG.append(np.zeros(52))
+    IFD_INCOMING.append(np.zeros(52))
+    IFD_BACKLOG.append(np.zeros(52))
+    IFD_DISPOSED.append(np.zeros(52))
+
+
+#### Converting list from lists
+CFD_INCOMING = list(itertools.chain.from_iterable(CFD_INCOMING))
+CFD_BACKLOG = list(itertools.chain.from_iterable(CFD_BACKLOG))
+CFD_DISPOSED = list(itertools.chain.from_iterable(CFD_DISPOSED))
+CFDS12_INCOMING = list(itertools.chain.from_iterable(CFDS12_INCOMING))
+CFDS12_BACKLOG = list(itertools.chain.from_iterable(CFDS12_BACKLOG))
+CFDS12_DISPOSED = list(itertools.chain.from_iterable(CFDS12_DISPOSED))
+IFD_INCOMING = list(itertools.chain.from_iterable(IFD_INCOMING))
+IFD_BACKLOG = list(itertools.chain.from_iterable(IFD_BACKLOG))
+IFD_DISPOSED = list(itertools.chain.from_iterable(IFD_DISPOSED))
+
+
+##### Changing DataTypes 
+CFD_ENGG = [int(i) for i in CFD_ENGG]
+IFD_ENGG = [int(i) for i in IFD_ENGG]
+CFD_INCOMING = [int(i) for i in CFD_INCOMING]
+CFD_BACKLOG = [int(i) for i in CFD_BACKLOG ]
+CFD_DISPOSED = [int(i) for i in CFD_DISPOSED]
+CFDS12_INCOMING = [int(i) for i in CFDS12_INCOMING]
+CFDS12_BACKLOG = [int(i) for i in CFDS12_BACKLOG]
+CFDS12_DISPOSED = [int(i) for i in CFDS12_DISPOSED]
+IFD_INCOMING = [int(i) for i in IFD_INCOMING]
+IFD_DISPOSED = [int(i) for i in IFD_DISPOSED]
+IFD_BACKLOG = [int(i) for i in IFD_BACKLOG]
+
+###### Creating Dataframe for Managers which are skipped
+Predictions_Managers = pd.DataFrame({'CFD_ENGG':CFD_ENGG,
+                                     'IFD_ENGG': IFD_ENGG,
+                                     'WEEK_END_DATE':Prediction_Dates,
+                                     'CFD_INCOMING':CFD_INCOMING,
+                                     'CFD_BACKLOG':CFD_BACKLOG,
+                                     'CFD_DISPOSED':CFD_DISPOSED,
+                                     'IFD_INCOMING':IFD_INCOMING,
+                                     'DE_MANAGER_USERID':Managers_Repeat,
+                                     'IFD_BACKLOG':IFD_BACKLOG,
+                                     'IFD_DISPOSED':IFD_DISPOSED,
+                                     'CFDS12_INCOMING':CFDS12_INCOMING,
+                                     'CFDS12_DISPOSED':CFDS12_DISPOSED,
+                                     'CFDS12_BACKLOG':CFDS12_BACKLOG,
+                                     'PredictionDate':PredictionDate,
+                                     'QUERY_ID':Query_ID})
+
+
+Manager_Predictions_Final = Manager_Predictions.append(Predictions_Managers,ignore_index=True)
+
+#### Removing the duplicate Prediction Data to save space
+del Manager_Predictions
+del Predictions_Managers
